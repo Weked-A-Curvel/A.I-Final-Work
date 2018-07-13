@@ -81,5 +81,14 @@ public class Population : MonoBehaviour {
 		}
 		return null;
 	}
-
+	//metodo que retorna o melhor individuo dentro da populacao atual.
+	public Individual bestFitnessOfPopulation(){
+		Individual best = this.getIndividual(0);
+		for(int i = 1; i < this.getPopulationSize(); i++){
+			if(best.getFitness() <= this.getIndividual(i).getFitness()){
+				best = this.getIndividual(i);
+			}
+		}
+		return best;
+	}
 }
