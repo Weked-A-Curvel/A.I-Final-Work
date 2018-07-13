@@ -22,7 +22,7 @@ public class MoveObjeto : MonoBehaviour {
 
 		transform.position = new Vector3 (x, transform.position.y, transform.position.z);
 
-		if (x <= -7) {
+		if (x <= -6) {
 			Destroy(transform.gameObject);
 		}
 	

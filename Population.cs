@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Population : MonoBehaviour {
+public class Population /*: MonoBehaviour*/ {
 	private Individual[] population;
 	private int size = 0;
 
