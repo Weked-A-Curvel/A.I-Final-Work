@@ -56,7 +56,7 @@ public class Population /*: MonoBehaviour*/ {
 			Individual temp = null;
 
 			//executando a verificacao.
-			if(tempElite1.getFitness() < tempElite2.getFitness()){
+			if(tempElite1.getFitness() > tempElite2.getFitness()){
 				//se verdade troca tempElite1 por tempElite2
 				temp = tempElite1;
 				tempElite1 = tempElite2;
@@ -64,8 +64,8 @@ public class Population /*: MonoBehaviour*/ {
 			}
 
 			//checando se existem outros fitness maiores do que nossa base inicial.
-			for(int i = 0; i < this.getPopulationSize(); i++){
-				if(tempElite1.getFitness() <= getIndividual(i).getFitness()){
+			for(int i = 2; i < this.getPopulationSize(); i++){
+				if(tempElite1.getFitness() >= getIndividual(i).getFitness()){
 					temp = tempElite1;
 					tempElite1 = getIndividual(i);
 					tempElite2 = temp;

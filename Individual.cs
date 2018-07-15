@@ -3,7 +3,7 @@ using System.Collections;
 
 public class Individual {
 	private double[] chromosome;
-	private double fitness = 0.0f;
+	private double fitness = 1.1f;
 	private int success = 0;
 	private int chromosomeSize = 4;
 
@@ -66,7 +66,7 @@ public class Individual {
 	//metodo responsavel por atualizar o parametro(gene) da posicao (position) do cromossomo.
 	public void setGene(int position, double gene){
 		this.chromosome [position] = gene;
-		this.fitness = 0.0f;
+		this.fitness = 1.1f;
 	}
 	//metodo para retornar o gene do cromossomo na posicao (position) indicada.
 	public double getGene(int position){
@@ -86,12 +86,14 @@ public class Individual {
 	//o fitness pode ser definido como a quantidade de barreiras ultrapassadas como denominador do 1.
 	public double getFitness(){
 		//verificando se o fitness ainda nao foi calculado para esse individuo
-		if (this.fitness == 0.0f) {
+		if (this.fitness == 1.1f) {
 			//isto servira para garantir que nao tenhamos a indeterminacao de n/0
 			//ou seja n/0 == pc explodindo.
 			if(this.getSuccess() > 0){
+				Debug.Log("sucesso do indivudo: " + this.getSuccess());
 				//calculando o fitness do individuo
-				this.fitness = 1/getSuccess();
+				this.fitness = 1.0f/getSuccess();
+				Debug.Log("fitness do individuo: " + this.fitness);
 				return this.fitness;
 			}
 		}

@@ -28,163 +28,262 @@ public class PlayerController : MonoBehaviour {
 	public UnityEngine.UI.Text txtPoints;
 	public static int pontuation;
 
-	//variaveis para o algoritmo genetico
-	public Individual individuo;
-	public Population population;
-	public int populationSize = 5;
-	public int individuoID = 0;
-	public bool activeAI = false;
-	public double jumpObsDistance = 1.0f;
-	public double jumpObsHeight = 0.0f;
-	public double slideObsDistance = 0.0f;
-	public double slideObsHeight = 0.0f;
-	public double timeToAction;
-	public double actionOffset;
-	public bool action = true;
-
-	//pegando distancia dos obstaculos
-	public GameObject obstacleTemp;
-	public GameObject[] obstacleVet;
-	public Vector3 obstaclePosit;
-	public double condicao;
+	//Inteligencia Artificial
+	public bool powerAI;
+	public bool Action;
+	public double actionTimeOffset;
+	public double actionTime;
+	public double entry;
+	public GameObject obstacle;
+	public double playerXposition;
+	public double obstacleXposition;
+	public double obstacleYposition;
+	public double actionDistace;
+	public double actionHeight;
+	//Algoritmo Genetico
+	public Individual ind;
+	public static Population population;
+	public static int individualID = 0;
+	public static int populationID = 0;
+	public static int generationID = 0;
+	public int populationSize = 1;
+	public int numberOfGenerations = 1;
+	public Individual testerIndividual;
+	public UnityEngine.UI.Text bestFitness;
+	public UnityEngine.UI.Text generation;
+	public UnityEngine.UI.Text indv;
 
 	// Use this for initialization
 	void Start () {
 		pontuation = 0;
 		PlayerPrefs.SetInt ("pontuacao", pontuation);
-		//instanciando populacao.
-		//population = this.GetComponent<Population> ();
-		population = new Population (populationSize, true);
 
+		powerAI = GeneticAlgorithmManager.powerAI;
+
+		if(powerAI){
+			//neste trecho iremos instanciar a classe do algoritmo genetico.
+			if (populationSize > 0 && !GeneticAlgorithmManager.savedValues) {
+				population = new Population (populationSize, true);
+			} else {
+				populationID = GeneticAlgorithmManager.populationID;
+				individualID = GeneticAlgorithmManager.individualID;
+				population = GeneticAlgorithmManager.population;
+
+			}
+			//neste trecho deve-se carregar o cromossomo do individuo em questao que esta jogando.
+			testerIndividual = population.getIndividual(individualID);
+			Debug.Log("individuo Atual: " + individualID);
+
+			//carregando os valores na ui
+			double tempUI = GeneticAlgorithmManager.bestFitness;
+			if(tempUI <= 1){
+				bestFitness.text = tempUI + "";
+			}else{
+				bestFitness.text = "not";
+			}
+			generation.text = GeneticAlgorithmManager.populationID + "";
+			indv.text = individualID + "";
+
+		}
 	}
 	
 	// Update is called once per frame
 	void Update () {
 
-		//definido como obter o obstaculo que estara mais proximo.
-		//falta adaptar o momento em que ele e trocado.
-		obstacleVet = GameObject.FindGameObjectsWithTag ("Respawn");
+		txtPoints.text = pontuation.ToString ();
 
-		if(obstacleVet.Length == 1){
-			obstacleTemp = obstacleVet [obstacleVet.Length - 1];
-			obstaclePosit = obstacleTemp.transform.position;
-			actionActivate(this.transform.position.x, obstaclePosit.x, 0.3);
-
-		}else if (obstacleVet.Length > 1) {
-			obstacleTemp = obstacleVet [obstacleVet.Length - 1];
-			obstaclePosit = obstacleTemp.transform.position;
-			if(obstaclePosit.x < this.transform.position.x){
-				obstacleTemp = obstacleVet [obstacleVet.Length - 2];
-				obstaclePosit = obstacleTemp.transform.position;
-			}
-			
-			//obtendo a posicao no eixo x do obstaculo para o calculo da distancia.
-			//player esta na posicao -1, obstaculo da respawn a partir do ponto 2.
-			//o calculo sera enquanto -1 < 2.
-			//obstaclePosit = obstacleTemp.transform.position;
-			actionActivate(this.transform.position.x, obstaclePosit.x, 0.003);
+		//secao onde ocorre o acionamento dos atuadores do player.
+		//--Acao de clique, com o botao esquerdo.
+		if (Input.GetMouseButtonDown (0) && groundead && !powerAI) { //modificacao da checagem original, acrescendo verificao da ia ligada.
+			/*codigo de player jump se encontrava antes aqui.*/
+			//chamando a funcao de pulo.
+			playerJump ();
 		}
-
-
-
-		//jumpNumber = population.getIndividual(0).getGene(0);
-
-		txtPoints.text = pontuation.ToString();
-
-		//teste para a implementacao da A.I
-
-		//fim do teste
-		//V={dist p/ pular, alt do obstaculo de pulo, dist p/ slide, alt do obstaculo de slide}
-		if(activeAI && !action){
-			double gene0 = population.getIndividual(0).getGene(0); //gene que diz respeito a distancia de pulo
-			double gene1 = population.getIndividual(0).getGene(1); //gene que diz respeito a altura maxima permitida para pulo
-			double gene2 = population.getIndividual(0).getGene(2); //gene que diz respeito a distacia para o slide
-			double gene3 = population.getIndividual(0).getGene(3); //gene que diz respeito a altura minima permitida para slide
-
-			if(jumpObsDistance < gene0 && groundead){
-				JumpAction();
-			}
-			if(jumpObsDistance > gene0 && groundead && !Slide){
-				SlideAction();
-			}
-			timeToAction = 0;
+		//--Acao de clique com o direito.
+		if (Input.GetMouseButtonDown (1) && groundead && !Slide && !powerAI) { //a mesma modificacao e acrescida aqui.
+			/*codigo de playerSlide se encontrava antes aqui*/
+			//chamando a funcao de slide.
+			playerSlide ();
 		}
-		if(!activeAI){
-			if(Input.GetMouseButtonDown(0) && groundead){
-				/*o codigo anterior ficava aqui*/
-				JumpAction();
-			}
-			if (Input.GetMouseButtonDown (1) && groundead && !Slide) {
-				/*o codigo anterior ficava aqui*/
-				SlideAction();
-			}
-		}
+		//fim da secao que ativa os atuadores.
 
+		//nova secao de atuadores, direcionadas para a IA.
+		/*
+		 * os testes estarao setados apenas para fim de verificacaoes
+		 * devem ser removidos em breve.
+		 * caracteristicas, simular entradas controladas
+		 * pulo valor da entrada deve ser 0.0055 < entrada
+		 * slide valor da entrada deve ser 0.0045 > entrada 
+		 */
+		//obtendo uma entrada aleatoria.
+		entry = Random.Range (0.0f, 1.0f);
+		//obtem o obstaculo mais proximo e a frente do player.
+		obstacle = getSpawnObstacle();
+		//calculo da distacia entre player e obstaculo.
+		actionDistace = distanceActionCalculate();
+		//calculo da altura do obstalo em questao para aplicar a entrada.
+		actionHeight = heightActionCalculate();
+		//teste que verifica se o player esta no chao, a ia ligada e a entrada esta entre a faixa
+		//para fins de entendimento da locica o seguinte trecho foi adicionado como comentario.
+		//if((!Action && groundead)&& (actionDistace <= 0.817654f && actionHeight < 0.56) && (0.55 < entry && powerAI)){
+		if((!Action && groundead)  && (0.53 < entry && powerAI) && (actionDistace <= testerIndividual.getGene(0)
+		                             && actionHeight < testerIndividual.getGene(1))){
+
+			playerJump();
+			//o agente tem que estar a limitado a caracteristicas semelhates a de um player humano.
+			//como por exemplo saber que devido a hardware nao tem acoes ilimitadas. algo que bugaria os calculos do jogo.
+			Action = true;
+			actionTime = 0.0f;
+		}
+		//este trecho tambem foi colocado como comentario
+		//if((!Action && groundead && !Slide) && (actionDistace <= 0.797654f && actionHeight > 0.78)&& (0.45 > entry && powerAI)){
+		if((!Action && groundead && !Slide) && (0.47 > entry && powerAI) && (actionDistace <= testerIndividual.getGene(2) 
+		                                        && actionHeight > testerIndividual.getGene(3))){
+			playerSlide();
+			//o agente tem que estar a limitado a caracteristicas semelhates a de um player humano.
+			//como por exemplo saber que devido a hardware nao tem acoes ilimitadas. algo que bugaria os calculos do jogo.
+			Action = true;
+			actionTime = 0.0f;
+		}
+		//fim da nova secao.
+
+		//checagem em relacao ao personagem estar no chao.
 		groundead = Physics2D.OverlapCircle (GroundCheck.position, 0.2f, whatIsGround);
 
+		//o slide tem uma animacao complicada, entao ela nao pode ser executada varias vezes.
+		//entao a compesacao e fazer um tempo de latencia entre um slide e outro.
 		if (Slide) {
-			timeTemp += Time.deltaTime;
-			if (timeTemp >= slideTemp){
-				colisor.position = new Vector3(colisor.position.x, colisor.position.y + 0.3f, colisor.position.z);
+			timeTemp += Time.deltaTime; 
+			if (timeTemp >= slideTemp) {
+				colisor.position = new Vector3 (colisor.position.x, colisor.position.y + 0.3f, colisor.position.z);
 				Slide = false;
 			}
 		}
-
-		if (action) {
-			timeToAction += Time.deltaTime;
-			if(timeToAction >= actionOffset){
-				action = false;
-			}
-		}
-
-
+		//as amimacoes sao executadas de acordo com a condicao
+		//pulo = player fora do chao.
+		//slide = player no chao + player fazendo slide true.
 		Anime.SetBool ("jump", !groundead);
 		Anime.SetBool ("slide", Slide);
-	}
 
-	void OnTriggerEnter2D(){
-		PlayerPrefs.SetInt ("pontuacao", pontuation);
-		if (pontuation > PlayerPrefs.GetInt ("recorde")) {
-			PlayerPrefs.SetInt("recorde", pontuation);
+		//fazendo o calculo do tempo para as acoes da IA.
+		//semelhante ao calculo de tempo para um slide.
+		if(Action){
+			actionTime += Time.deltaTime;
+			if(actionTime >= actionTimeOffset){
+				Action = false;
+			}
 		}
-		Application.LoadLevel ("GameOver");
+		//--
 	}
-
-	void JumpAction(){
+	//metodo que executa o pulo.
+	void playerJump(){
 		PlayerRigidBody.AddForce(new Vector2(0, ForceJump));
 		sound.volume = 1;
 		sound.PlayOneShot(SoundJump);
-		//
-		action = true;
-		timeToAction = 0;
 		
+		//se um pulo e executado durante um slide, o colisor deve mudar, e o player nao pode
+		//mais ser capaz de executar um novo slide.
 		if (Slide){
 			colisor.position = new Vector3(colisor.position.x, colisor.position.y + 0.3f, colisor.position.z);
 			Slide = false;
 		}
 	}
 
-	void SlideAction(){
+	//metodo que executa o slide.
+	void playerSlide(){
 		colisor.position = new Vector3(colisor.position.x, colisor.position.y - 0.3f, colisor.position.z);
 		sound.volume = 0.5f;
 		sound.PlayOneShot(SoundSlide);
 		Slide = true;
 		timeTemp = 0;
-		//
-		action = true;
-		timeToAction = 0;
 	}
-		
-	bool actionActivate(double x1, double x2, double parameter){
-		if(x2 != 0){
-			double temp = (x1/x2)*-1;
-			if(temp <= parameter){
-				return true;
-			} 
+
+	//metodo que busca sempre o obstaculo no primeiro lugar da fila de spawn.
+	public GameObject getSpawnObstacle(){
+		GameObject[] spawnedObstacle;
+		GameObject selectedObstacle;
+
+		//inicializando a sainda
+		selectedObstacle = null;
+		//selecionando grupo de objetos com uma tag especifica dentro da cena.
+		spawnedObstacle = GameObject.FindGameObjectsWithTag ("Respawn");
+
+		//se o vetor contendo os obstaculos em tela for apenas um, o pegamos, simples.
+		if(spawnedObstacle.Length == 1){
+			selectedObstacle = spawnedObstacle[0];
+		}else if(spawnedObstacle.Length > 1){
+			//porem se for maior que isso temos um pouco de preocupacao.
+			//pegamos o tamanho - 1 e encontramos um dos obstaculos
+			selectedObstacle = spawnedObstacle[spawnedObstacle.Length - 1];
+			//verificamos aqui se este obstaculo esta a frente do nosso player.
+			//se estiver atras, entao temos que pegar o proximo do vetor.
+			if(selectedObstacle.transform.position.x < this.transform.position.x){
+				selectedObstacle = spawnedObstacle[spawnedObstacle.Length - 2];
+			}
 		}
-		return false;
+
+		return selectedObstacle;
 	}
-}
+
+	//metodo que calcula a distancia para a acao do player pela distancia do obstaculo.
+	public double distanceActionCalculate(){
+		//obtendo a posicao no eixo x do player.
+		playerXposition = Mathf.Abs(this.transform.position.x);
+		//obtendo a posicao no eixo x da barreira mais proxima.
+		if (obstacle != null && obstacle.transform.position.x < 0) {
+			obstacleXposition = Mathf.Abs (obstacle.transform.position.x);
+		}else {
+			obstacleXposition = 0;
+		}
+
+		return playerXposition - obstacleXposition;
+	}
+
+	public double heightActionCalculate(){
+		double result = 1.0f;
+		double barrelOffset = 0.15;
+		//obtendo a posicao no eixo y da barreira mais proxima.
+		if (obstacle != null /*&& obstacle.transform.position.x < 0*/) {
+			obstacleYposition = obstacle.transform.position.y;
+			if(obstacleYposition <= -2.15){
+				result = obstacleYposition + (((obstacle.transform.localScale.y)/2) - barrelOffset);
+			}else{
+				result = obstacleYposition - ((obstacle.transform.localScale.y)/2);			
+			}
+			result = result * -1;
+			result = 1/result;
+		}
+
+		return result;
+	}
+	//metodo que captura a colisao do player com o obstaculo, salva a pontuacao e chama a tela de gameOver.
+	void OnTriggerEnter2D(){
+		PlayerPrefs.SetInt ("pontuacao", pontuation);
+		PlayerPrefs.SetInt ("BestNum", pontuation);
+		if (pontuation > PlayerPrefs.GetInt ("recorde")) {
+			PlayerPrefs.SetInt("recorde", pontuation);
+		}
+
+		if (this.powerAI) {//so salva os dados, se a ia estiver ligada.
+			//antes de carregar a cena, nossas informacoes do algoritmo genetico devem ser salvas.
+			//GeneticAlgorithmManager.generationID = generationID;
+			GeneticAlgorithmManager.populationID = populationID;
+			GeneticAlgorithmManager.individualID = individualID;
+			//GeneticAlgorithmManager.populationSize = populationSize;
+			GeneticAlgorithmManager.numberOfGenerations = numberOfGenerations;
+			GeneticAlgorithmManager.powerAI = powerAI;
+			GeneticAlgorithmManager.savedValues = true;
+			//o sucesso do individuo nessa geracao deve ser salvo, esta linha garante isso.
+			testerIndividual.setSucess(pontuation);
+			//o individuo com suas taxa de sucesso atualizada e atualizado na populacao.
+			population.saveIndividual(individualID, testerIndividual);
+			GeneticAlgorithmManager.population = population;
+		}
+		//carrega a outra cena.
+		Application.LoadLevel ("GameOver");
+	}
+
+}//fim da classe
 
 
 

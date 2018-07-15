@@ -1,14 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class GeneticAlgorithm : MonoBehaviour {
-	private static double _crossoverRate = 0.30;
-	private static double _mutationRate = 0.015;
+public class GeneticAlgorithm {
+	private static double _crossoverRate = 0.27;
+	private static double _mutationRate = 0.12;
 	private static int _tournamentLenght = 4;
 	private static bool elitism = true;
 	private static Individual[] elite;
 
 	public static Population evolvePopulation(Population tempPopulation){
+		Debug.Log("Evoluindo Populacao: " + (GeneticAlgorithmManager.populationID - 1));
 		if(tempPopulation != null && tempPopulation.getPopulationSize() > 3){
 			//iniciando uma nova geracao, essa por sua vez tera a elite da anterior acrecida de seus filhos
 			//e possiveis mutacoes.
@@ -22,16 +23,25 @@ public class GeneticAlgorithm : MonoBehaviour {
 				if(elitism){
 					//elite tera os melhores da geracao anterior
 					elite = tempPopulation.getEliteForFitness();
+
+					//verificacao do calculo do melhor fitness.
+					Debug.Log("best Fitness: " + elite[0].getFitness());
+
+					//como os idividuos da elite estao se propagando para uma nova geracao
+					//seu fitness deve voltar ao estado original(nao calculado).
+					//elite[0].setFitness(1.1f);
+					//elite[1].setFitness(1.1f);
 					//melhores sendos propagados para a nova geracao.
 					newPopulation.saveIndividual(0, elite[0]);
 					newPopulation.saveIndividual(1, elite[1]);
 					//aplicando o cruzamento, crossover.
-					//Este crossover, defini nesta linha como sendo um obrigatorio.
+					//Este crossover, defini-se nesta linha como sendo um obrigatorio.
 					Individual son = crossover(elite[0], elite[1]);
 					newPopulation.saveIndividual(2, son);
 					//eliteCut sendo valorado como sendo 3, ou seja, dois individuos elite + o filho da elite(burgues kkk)
 					//o restante da populacao e nao elite e deve se degladiar para obter propagacao de gene.
 					eliteCut = 3;
+
 				}
 				//os proximos serao aplicados a taxa de crossover.
 				//porem esse crossover sera aplicado por selecao a partir do restante da populacao
@@ -54,6 +64,8 @@ public class GeneticAlgorithm : MonoBehaviour {
 						itsMutateTime(newPopulation.getIndividual(i));
 					}
 				}
+				Debug.Log("Populacao Evoluida: " + GeneticAlgorithmManager.populationID);
+				return newPopulation;
 			}
 		}
 		return null;
